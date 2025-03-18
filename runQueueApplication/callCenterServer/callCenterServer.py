@@ -19,18 +19,17 @@ class CallCenterServer(LineReceiver):
             data = json.loads(line.decode('utf-8'))
             command = data.get("command")
             id = data.get("id")
-        
-            match command:
-                case "call":
-                    self.do_call(id)
-                case "answer":
-                    self.do_answer(id)
-                case "reject":
-                    self.do_reject(id)
-                case "hangup":
-                    self.do_hangup(id)
-                case _:
-                    self.sendResponse("Invalid command")
+                
+            if command == "call":
+                self.do_call(id)
+            elif command == "answer":
+                self.do_answer(id)
+            elif command == "reject":
+                self.do_reject(id)
+            elif command == "hangup":
+                self.do_hangup(id)
+            else:
+                self.sendResponse("Invalid command")
 
         except json.JSONDecodeError:
             self.sendResponse("Error parsing JSON")
