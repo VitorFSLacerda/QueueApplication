@@ -44,7 +44,7 @@ class CallCenterServer(LineReceiver):
         response_data = {"response": response_message}
         self.sendLine(json.dumps(response_data).encode('utf-8'))
 
-
+    
     def do_call(self, call_id):
         """Receives a call."""
 
@@ -62,18 +62,18 @@ class CallCenterServer(LineReceiver):
         if operator:
             operator.assign_call(call)
             self.sendResponse(f"Call {call.id} ringing for operator {operator.operator_id}")
+            operator.timeout_call = reactor.callLater(10, self.check_timeout, operator, call.id)
 
         else:
             self.queue.append(call)
             self.sendResponse(f"Call {call.id} waiting in queue")
 
 
-
     def do_answer(self, operator_id):
         """The operator answers the call."""
 
         operator = next((op for op in self.operators if op.operator_id == operator_id), None)
-
+        self.abort_timeout(operator)
         if operator and operator.status == 'ringing':
             operator.answer_call()
             self.sendResponse(f"Call {operator.call.id} answered by operator {operator_id}")
@@ -83,8 +83,9 @@ class CallCenterServer(LineReceiver):
         """The operator rejects a call."""
 
         operator = next((op for op in self.operators if op.operator_id == operator_id), None)
-
-        if operator and operator.status == 'ringing':
+        
+        if operator and operator.timeout_call and operator.timeout_call.active() and operator.status == 'ringing':
+            self.abort_timeout(operator)
             operator.call.set_status('available')
             self.sendResponse(f"Call {operator.call.id} rejected by operator {operator_id}")
             next_call = operator.call
@@ -129,6 +130,24 @@ class CallCenterServer(LineReceiver):
             return self.queue.pop(0)
         return None
     
+
+    def check_timeout(self, operator, call_id):
+
+        self.abort_timeout(operator)
+
+        if operator.status == 'ringing' and operator.call and operator.call.id == call_id:
+            self.sendResponse(f"Call {call_id} ignored by operator {operator.operator_id}")
+            operator.call = None
+            operator.set_status('available')
+            self.verify_status()
+
+
+    def abort_timeout(self, operator):
+        
+        if operator.timeout_call and operator.timeout_call.active():
+            operator.timeout_call.cancel()
+            operator.timeout_call = None
+
 
 class CallCenterServerFactory(protocol.Factory):
 

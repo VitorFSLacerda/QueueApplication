@@ -4,6 +4,7 @@ class SupportOperator:
 
         self.operator_id = operator_id
         self.status = 'available'
+        self.timeout_call = None
         self.call = None
 
 
