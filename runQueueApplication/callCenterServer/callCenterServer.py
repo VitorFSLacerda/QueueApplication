@@ -19,7 +19,7 @@ class CallCenterServer(LineReceiver):
             data = json.loads(line.decode('utf-8'))
             command = data.get("command")
             id = data.get("id")
-                
+        
             if command == "call":
                 self.do_call(id)
             elif command == "answer":
@@ -30,6 +30,7 @@ class CallCenterServer(LineReceiver):
                 self.do_hangup(id)
             else:
                 self.sendResponse("Invalid command")
+
 
         except json.JSONDecodeError:
             self.sendResponse("Error parsing JSON")
@@ -131,7 +132,8 @@ class CallCenterServer(LineReceiver):
     
 
     def check_timeout(self, operator, call_id):
-
+        """Checks if the operator did not respond within the timeout period."""
+        
         self.abort_timeout(operator)
 
         if operator.status == 'ringing' and operator.call and operator.call.id == call_id:
@@ -142,7 +144,8 @@ class CallCenterServer(LineReceiver):
 
 
     def abort_timeout(self, operator):
-        
+        """Cancels the operator’s active timeout if it is still pending."""
+
         if operator.timeout_call and operator.timeout_call.active():
             operator.timeout_call.cancel()
             operator.timeout_call = None

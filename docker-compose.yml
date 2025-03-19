@@ -1,0 +1,21 @@
+version: '3'
+services:
+  server:
+    image: vitorfslacerda/callcenter-server
+    container_name: server-container
+    ports:
+      - "5678:5678"
+    networks:
+      - callcenter-net
+
+  client:
+    image: vitorfslacerda/callcenter-client
+    container_name: client-container
+    networks:
+      - callcenter-net
+    stdin_open: true
+    tty: true
+
+networks:
+  callcenter-net:
+    driver: bridge
