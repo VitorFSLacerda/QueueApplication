@@ -16,7 +16,8 @@ class CallCenterClient(LineReceiver):
         """Processes each line received from the server."""
 
         response = json.loads(line.decode('utf-8'))
-        print(f"\n{response['response']}\n", end='')
+        print(f"{response['response']}")
+        print("", end='', flush=True)
 
     def sendCommand(self, command):
         """Sends a JSON command to the server."""
